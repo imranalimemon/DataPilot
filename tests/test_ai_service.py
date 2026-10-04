@@ -338,5 +338,92 @@ class TestMockedToolFlow(unittest.TestCase):
         self.assertEqual(second_call_contents[2].role, "user")
 
 
+class TestReportMetadata(unittest.TestCase):
+    def setUp(self):
+        self.original_df = pd.DataFrame({"d": pd.to_datetime(["2024-01-01"]), "p": ["A"], "r": [100]})
+        self.adf = self.original_df.copy()
+        
+    @patch("ai_service.get_api_key", return_value="fake")
+    @patch("ai_service._generate_with_retry")
+    def test_filters_disabled(self, mock_gen, mock_key):
+        mock_gen.return_value.text = "Fake report"
+        # Simulate generate_report with no filters or dupes removed
+        res = ai_service.generate_report(
+            self.adf, "d", "p", "r", 
+            original_df=self.original_df,
+            parse_info={"duplicates_removed": 0},
+            remove_duplicates=False,
+            filter_info=None  # or passed with disabled flags
+        )
+        md = res["report_markdown"]
+        self.assertIn("### Analysis scope", md)
+        self.assertIn("- Uploaded row count: 1", md)
+        self.assertIn("- Rows removed by duplicate cleaning: 0", md)
+        self.assertIn("- Rows before filtering (after duplicate policy): 1", md)
+        self.assertIn("- Rows excluded by filters: 0", md)
+        self.assertIn("- Rows after filtering: 1", md)
+        self.assertIn("- Date filter: Disabled", md)
+        self.assertIn("- Product filter: Disabled", md)
+
+    @patch("ai_service.get_api_key", return_value="fake")
+    @patch("ai_service._generate_with_retry")
+    def test_filters_enabled(self, mock_gen, mock_key):
+        mock_gen.return_value.text = "Fake report"
+        filter_info = {
+            "date_filtering_enabled": True,
+            "start_date": pd.Timestamp("2024-01-01"),
+            "end_date": pd.Timestamp("2024-01-31"),
+            "product_filtering_enabled": True,
+            "selected_products": ["A", "B"],
+            "rows_before": 10,
+            "rows_after": 7,
+            "rows_excluded": 3,
+        }
+        res = ai_service.generate_report(
+            self.adf, "d", "p", "r", 
+            original_df=self.original_df, # e.g. length 12
+            parse_info={"duplicates_removed": 2},
+            remove_duplicates=True,
+            filter_info=filter_info
+        )
+        md = res["report_markdown"]
+        self.assertIn("### Analysis scope", md)
+        self.assertIn("- Uploaded row count: 1", md) # From len(original_df)
+        self.assertIn("- Rows removed by duplicate cleaning: 2", md)
+        self.assertIn("- Rows before filtering (after duplicate policy): 10", md)
+        self.assertIn("- Rows excluded by filters: 3", md)
+        self.assertIn("- Rows after filtering: 7", md)
+        self.assertIn("2024-01-01 to 2024-01-31", md)
+        self.assertIn("- Product filter: A, B", md)
+
+    @patch("ai_service.get_api_key", return_value="fake")
+    @patch("ai_service._generate_with_retry")
+    def test_duplicate_cleaning_and_filtering(self, mock_gen, mock_key):
+        mock_gen.return_value.text = "Fake report"
+        filter_info = {
+            "date_filtering_enabled": False,
+            "product_filtering_enabled": True,
+            "selected_products": ["A"],
+            "rows_before": 20,
+            "rows_after": 15,
+            "rows_excluded": 5,
+        }
+        res = ai_service.generate_report(
+            self.adf, "d", "p", "r", 
+            original_df=pd.DataFrame({"d": ["2024-01-01"] * 25, "p": ["A"] * 25, "r": [100] * 25}), 
+            parse_info={"duplicates_removed": 5},
+            remove_duplicates=True,
+            filter_info=filter_info
+        )
+        md = res["report_markdown"]
+        self.assertIn("### Analysis scope", md)
+        self.assertIn("- Uploaded row count: 25", md)
+        self.assertIn("- Rows removed by duplicate cleaning: 5", md)
+        self.assertIn("- Rows before filtering (after duplicate policy): 20", md)
+        self.assertIn("- Rows excluded by filters: 5", md)
+        self.assertIn("- Rows after filtering: 15", md)
+        self.assertIn("- Date filter: Disabled", md)
+        self.assertIn("- Product filter: A", md)
+
 if __name__ == "__main__":
     unittest.main()

@@ -568,16 +568,40 @@ def generate_report(
             f"**Duplicate Removal:** {'Enabled' if remove_duplicates else 'Disabled'}",
         ])
         
-        if filter_info and (filter_info.get("date_filtering_enabled") or filter_info.get("product_filtering_enabled")):
-            f_lines = []
+        uploaded_count = len(original_df) if original_df is not None else len(adf)
+        dupes_removed = parse_info.get("duplicates_removed", 0) if parse_info else 0
+        
+        if filter_info:
+            rows_before = filter_info.get("rows_before", uploaded_count - dupes_removed)
+            rows_excluded = filter_info.get("rows_excluded", 0)
+            rows_after = filter_info.get("rows_after", rows_before)
+            
+            date_filter_status = "Disabled"
             if filter_info.get("date_filtering_enabled"):
-                f_lines.append(f"Date Range: {filter_info['start_date'].date()} to {filter_info['end_date'].date()}")
+                date_filter_status = f"{filter_info['start_date'].date()} to {filter_info['end_date'].date()}"
+                
+            prod_filter_status = "Disabled"
             if filter_info.get("product_filtering_enabled"):
-                f_lines.append(f"Products: {', '.join(filter_info['selected_products']) if filter_info['selected_products'] else 'None'}")
-            metadata_lines.extend([
-                f"**Active Filters:** {'; '.join(f_lines)}",
-                f"**Rows Excluded by Filters:** {filter_info['rows_excluded']} (matched {filter_info['rows_after']} of {filter_info['rows_before']})",
-            ])
+                prods = filter_info.get("selected_products", [])
+                prod_filter_status = ", ".join(prods) if prods else "None"
+        else:
+            rows_before = uploaded_count - dupes_removed
+            rows_excluded = 0
+            rows_after = rows_before
+            date_filter_status = "Disabled"
+            prod_filter_status = "Disabled"
+
+        metadata_lines.extend([
+            "",
+            "### Analysis scope",
+            f"- Uploaded row count: {uploaded_count}",
+            f"- Rows removed by duplicate cleaning: {dupes_removed}",
+            f"- Rows before filtering (after duplicate policy): {rows_before}",
+            f"- Rows excluded by filters: {rows_excluded}",
+            f"- Rows after filtering: {rows_after}",
+            f"- Date filter: {date_filter_status}",
+            f"- Product filter: {prod_filter_status}",
+        ])
             
         metadata_lines.extend([
             "",
