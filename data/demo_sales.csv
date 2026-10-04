@@ -1,0 +1,26 @@
+date,product,category,quantity,revenue
+2024-01-05,Widget A,Gadgets,10,250.00
+2024-01-12,Widget B,Gadgets,5,125.00
+2024-01-20,Gizmo X,Tools,8,400.00
+2024-02-03,Widget A,Gadgets,12,300.00
+2024-02-14,Gizmo X,Tools,6,300.00
+2024-02-28,Widget B,Gadgets,7,175.00
+2024-03-05,Doohickey,Accessories,15,225.00
+2024-03-15,Widget A,Gadgets,9,225.00
+2024-03-22,Gizmo X,Tools,11,550.00
+2024-04-01,Widget B,Gadgets,4,100.00
+2024-04-10,Doohickey,Accessories,20,300.00
+2024-04-18,Widget A,Gadgets,6,150.00
+2024-05-02,Gizmo X,Tools,14,700.00
+2024-05-11,Widget B,Gadgets,,137.50
+2024-05-20,Doohickey,Accessories,10,150.00
+2024-05-28,Widget A,Gadgets,8,200.00
+2024-06-05,Gizmo X,Tools,9,450.00
+2024-06-15,,Gadgets,5,125.00
+2024-06-22,Widget B,Gadgets,6,150.00
+not-a-date,Doohickey,Accessories,12,180.00
+2024-06-30,Widget A,Gadgets,11,275.00
+2024-04-01,Widget B,Gadgets,4,100.00
+2024-07-08,Gizmo X,Tools,7,350.00
+2024-07-15,Widget A,Gadgets,13,325.00
+2024-07-22,Doohickey,Accessories,9,
