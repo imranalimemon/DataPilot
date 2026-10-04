@@ -43,5 +43,38 @@ class TestAppFilters(unittest.TestCase):
         mds = [m.value for m in self.at.markdown]
         self.assertFalse(any('Supporting data — Sales Summary' in m for m in mds))
 
+    def test_reset_filters_regression(self):
+        # Enable filters
+        date_chk = [c for c in self.at.checkbox if c.label == 'Filter by Date Range'][0]
+        date_chk.set_value(True).run(timeout=15)
+        
+        prod_chk = [c for c in self.at.checkbox if c.label == 'Filter by Product'][0]
+        prod_chk.set_value(True).run(timeout=15)
+        
+        # Verify revenue changed (or at least filters are checked)
+        self.assertTrue([c for c in self.at.checkbox if c.label == 'Filter by Date Range'][0].value)
+        self.assertTrue([c for c in self.at.checkbox if c.label == 'Filter by Product'][0].value)
+        
+        # Click Reset
+        reset_btn = [b for b in self.at.button if b.label == 'Reset filters'][0]
+        reset_btn.click().run(timeout=15)
+        
+        # Click an example question to cause unrelated rerun
+        ex_btn = [b for b in self.at.button if 'Which products earn the most revenue?' in b.label][0]
+        ex_btn.click().run(timeout=15)
+        
+        # Assert filters remained disabled
+        self.assertFalse([c for c in self.at.checkbox if c.label == 'Filter by Date Range'][0].value)
+        self.assertFalse([c for c in self.at.checkbox if c.label == 'Filter by Product'][0].value)
+        
+        # Assert revenue is restored to full
+        for m in self.at.metric:
+            if m.label == 'Total revenue':
+                self.assertEqual(m.value, '6,242.50')
+                
+        # Assert example question populated correctly
+        ti = [t for t in self.at.text_input if 'Ask a question' in t.label][0]
+        self.assertEqual(ti.value, 'Which products earn the most revenue?')
+
 if __name__ == '__main__':
     unittest.main()

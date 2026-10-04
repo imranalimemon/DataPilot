@@ -218,9 +218,10 @@ if notes:
 st.subheader("Analysis filters")
 
 if st.button("Reset filters"):
-    for k in ["enable_date_filter", "enable_prod_filter", "selected_prods_filter"]:
-        st.session_state.pop(k, None)
-    st.rerun()
+    st.session_state["enable_date_filter"] = False
+    st.session_state["enable_prod_filter"] = False
+    if "selected_prods_filter" in st.session_state:
+        st.session_state["selected_prods_filter"] = []
 
 col_filt1, col_filt2 = st.columns(2)
 
